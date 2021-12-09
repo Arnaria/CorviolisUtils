@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "corviolisutils",
+  "version": "${version}",
+  "name": "CorviolisUtils",
+  "description": "",
+  "authors": ["MrNavaStar"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "corviolis.corviolisutils.CorviolisUtils"
+    ]
+  },
+  "mixins": [
+    "corviolisutils.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.12.6",
+    "fabric": "*",
+    "minecraft": "1.18.x"
+  }
+}
