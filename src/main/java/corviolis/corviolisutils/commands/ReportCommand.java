@@ -21,6 +21,7 @@ import net.minecraft.util.Formatting;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 
 public class ReportCommand {
 
@@ -35,59 +36,77 @@ public class ReportCommand {
 
         dispatcher.register(CommandManager.literal("reporting").requires(source -> source.hasPermissionLevel(4))
                 .then(CommandManager.argument("player", GameProfileArgumentType.gameProfile())
+
+                .then(CommandManager.literal("info")
+                .executes(context -> viewInfo(context, GameProfileArgumentType.getProfileArgument(context, "player"))))
+
+                .then(CommandManager.literal("allowedToReport")
                 .then(CommandManager.argument("allowedToReport", BoolArgumentType.bool())
-                .executes(context -> setReportingPermission(context, GameProfileArgumentType.getProfileArgument(context, "player"), BoolArgumentType.getBool(context, "allowedToReport")))))
+                .executes(context -> setReportingPermission(context, GameProfileArgumentType.getProfileArgument(context, "player"), BoolArgumentType.getBool(context, "allowedToReport"))))))
         );
+    }
+
+    private static DataContainer getProfile(UUID uuid) {
+        reportingPerms.beginTransaction();
+        DataContainer profile = reportingPerms.get(uuid);
+        if (profile == null) {
+            profile = reportingPerms.createDataContainer(uuid);
+            profile.put("ALLOWED_TO_REPORT", true);
+            profile.put("REPORTS", 0);
+        }
+        reportingPerms.endTransaction();
+        return profile;
     }
 
     private static int fileReport(CommandContext<ServerCommandSource> context, Collection<GameProfile> targets, String reason) throws CommandSyntaxException {
         PlayerEntity executor = context.getSource().getPlayer();
+        DataContainer profile = getProfile(executor.getUuid());
 
-        reportingPerms.beginTransaction();
-        DataContainer player = reportingPerms.get(executor.getUuid());
-        if (player == null) {
-            player = reportingPerms.createDataContainer(executor.getUuid());
-            player.put("ALLOWED_TO_REPORT", true);
-        }
-
-        if (player.getBoolean("ALLOWED_TO_REPORT")) {
-            for (GameProfile profile : targets) {
-                String offender = profile.getName();
-                long time = player.getLong(offender);
-
-                if (profile.getId().equals(executor.getUuid())) {
+        if (profile.getBoolean("ALLOWED_TO_REPORT")) {
+            for (GameProfile p : targets) {
+                if (p.getId().equals(executor.getUuid())) {
                     executor.sendMessage(new LiteralText("You can't report yourself").formatted(Formatting.DARK_RED), false);
                     return 1;
                 }
 
-                if (time != -0 && new Date().compareTo(new Date(time)) < 0) {
-                    executor.sendMessage(new LiteralText("You have already reported this player recently").formatted(Formatting.RED), false);
-                } else {
-                    if (time != -0) player.dropLong(offender);
-                    player.put(offender, new Date().getTime());
+                String offender = p.getName();
+                long time = profile.getLong(offender);
+
+                if (time + CorviolisUtils.settings.reportDelay <= new Date().getTime()) {
+                    if (time != -0) profile.dropLong(offender);
+                    profile.put(offender, new Date().getTime());
+                    profile.put("REPORTS", profile.getInt("REPORTS") + 1);
 
                     executor.sendMessage(new LiteralText("Report Sent").formatted(Formatting.GREEN), false);
                     AirtableAPI.createReport(executor.getEntityName(), offender, reason);
                     TodoistAPI.createReport(executor.getEntityName(), offender, reason);
-                }
+
+                } else executor.sendMessage(new LiteralText("You have already reported this player recently").formatted(Formatting.RED), false);
             }
         } else executor.sendMessage(new LiteralText("You are not allowed to report. Please contact an admin if you believe this is a mistake").formatted(Formatting.RED), false);
-
-        reportingPerms.endTransaction();
         return 1;
     }
 
     private static int setReportingPermission(CommandContext<ServerCommandSource> context, Collection<GameProfile> targets, boolean allowedToReport) throws CommandSyntaxException {
         PlayerEntity executor = context.getSource().getPlayer();
 
-        for (GameProfile profile : targets) {
-            DataContainer player = reportingPerms.get(profile.getId());
-            if (player == null) player = reportingPerms.createDataContainer(profile.getId());
+        for (GameProfile p : targets) {
+            DataContainer profile = getProfile(p.getId());
+            profile.put("ALLOWED_TO_REPORT", allowedToReport);
+            if (allowedToReport) executor.sendMessage(new LiteralText(p.getName() + " is now allowed to make reports"), false);
+            else executor.sendMessage(new LiteralText(p.getName() + " is no longer allowed to make reports"), false);
+        }
+        return 1;
+    }
 
-            player.put("ALLOWED_TO_REPORT", allowedToReport);
+    private static int viewInfo(CommandContext<ServerCommandSource> context, Collection<GameProfile> targets) throws CommandSyntaxException {
+        PlayerEntity executor = context.getSource().getPlayer();
 
-            if (allowedToReport) executor.sendMessage(new LiteralText(profile.getName() + " is now allowed to makes report"), false);
-            else executor.sendMessage(new LiteralText(profile.getName() + " is no longer allowed to make reports"), false);
+        for (GameProfile p : targets) {
+            DataContainer profile = getProfile(p.getId());
+            executor.sendMessage(new LiteralText(p.getName() + " reporting info:"), false);
+            executor.sendMessage(new LiteralText("Allowed to report: " + profile.getBoolean("ALLOWED_TO_REPORT")), false);
+            executor.sendMessage(new LiteralText("Reports: " + profile.getInt("REPORTS")), false);
         }
         return 1;
     }
