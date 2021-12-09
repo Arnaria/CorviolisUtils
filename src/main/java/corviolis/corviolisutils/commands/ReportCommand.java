@@ -104,7 +104,7 @@ public class ReportCommand {
 
         for (GameProfile p : targets) {
             DataContainer profile = getProfile(p.getId());
-            executor.sendMessage(new LiteralText(p.getName() + " reporting info:"), false);
+            executor.sendMessage(new LiteralText(p.getName() + ":").formatted(Formatting.AQUA), false);
             executor.sendMessage(new LiteralText("Allowed to report: " + profile.getBoolean("ALLOWED_TO_REPORT")), false);
             executor.sendMessage(new LiteralText("Reports: " + profile.getInt("REPORTS")), false);
         }
