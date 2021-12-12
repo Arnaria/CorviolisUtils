@@ -65,9 +65,14 @@ public class ReportCommand {
         if (profile.getBoolean("ALLOWED_TO_REPORT")) {
             for (GameProfile p : targets) {
                 if (p.getId().equals(executor.getUuid())) {
-                    executor.sendMessage(new LiteralText("You can't report yourself").formatted(Formatting.DARK_RED), false);
+                    executor.sendMessage(new LiteralText("You can't report yourself").formatted(Formatting.RED), false);
                     return 1;
                 }
+
+                /*if (CorviolisUtils.getPlayer(p.getName()) == null) {
+                    executor.sendMessage(new LiteralText("There is no player with that name").formatted(Formatting.RED), false);
+                    return 1;
+                } */
 
                 String offender = p.getName();
                 long time = profile.getLong(offender);
@@ -78,7 +83,7 @@ public class ReportCommand {
                     profile.put("REPORTS", profile.getInt("REPORTS") + 1);
 
                     executor.sendMessage(new LiteralText("Report Sent").formatted(Formatting.GREEN), false);
-                    AirtableAPI.createReport(executor.getEntityName(), offender, reason);
+                    AirtableAPI.createReport(executor.getEntityName(), offender, reason, "report");
                     TodoistAPI.createReport(executor.getEntityName(), offender, reason);
 
                 } else executor.sendMessage(new LiteralText("You have already reported this player recently").formatted(Formatting.RED), false);
