@@ -2,7 +2,7 @@ package corviolis.corviolisutils.mixin;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import corviolis.corviolisutils.services.api.airtable.AirtableAPI;
+import corviolis.corviolisutils.services.api.NocodbAPI;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.dedicated.command.BanCommand;
@@ -21,8 +21,11 @@ public class BanCommandMixin {
     private static void logBan(ServerCommandSource source, Collection<GameProfile> targets, Text reason, CallbackInfoReturnable<Integer> cir) throws CommandSyntaxException {
         PlayerEntity executor = source.getPlayer();
 
-        for (GameProfile p : targets) {
-            AirtableAPI.createReport(executor.getEntityName(), p.getName(), reason.asString(), "ban");
+        for (GameProfile target : targets) {
+            String r = reason.asString();
+            if (r == null) r = "No reason given";
+
+            NocodbAPI.createReport(executor, target, r, "ban");
         }
     }
 }

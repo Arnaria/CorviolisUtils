@@ -5,7 +5,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import corviolis.corviolisutils.commands.ReportCommand;
 import corviolis.corviolisutils.commands.RulesCommand;
 import corviolis.corviolisutils.commands.SyncBansCommand;
-import corviolis.corviolisutils.services.api.airtable.AirtableAPI;
+import corviolis.corviolisutils.services.api.NocodbAPI;
 import corviolis.corviolisutils.services.api.TodoistAPI;
 import corviolis.corviolisutils.util.Settings;
 import mc.microconfig.MicroConfig;
@@ -36,7 +36,8 @@ public class CorviolisUtils implements ModInitializer {
 
             ServerLifecycleEvents.SERVER_STARTED.register(server -> {
                 TodoistAPI.init();
-                AirtableAPI.init();
+                //AirtableAPI.init();
+                NocodbAPI.init();
 
                 userCache = server.getUserCache();
                 playerManager = server.getPlayerManager();

@@ -7,7 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import corviolis.corviolisutils.CorviolisUtils;
-import corviolis.corviolisutils.services.api.airtable.AirtableAPI;
+import corviolis.corviolisutils.services.api.NocodbAPI;
 import corviolis.corviolisutils.services.api.TodoistAPI;
 import mrnavastar.sqlib.api.DataContainer;
 import mrnavastar.sqlib.api.Table;
@@ -18,7 +18,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Formatting;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.UUID;
@@ -63,8 +62,8 @@ public class ReportCommand {
         DataContainer profile = getProfile(executor.getUuid());
 
         if (profile.getBoolean("ALLOWED_TO_REPORT")) {
-            for (GameProfile p : targets) {
-                if (p.getId().equals(executor.getUuid())) {
+            for (GameProfile offender : targets) {
+                if (offender.getId().equals(executor.getUuid())) {
                     executor.sendMessage(new LiteralText("You can't report yourself").formatted(Formatting.RED), false);
                     return 1;
                 }
@@ -74,17 +73,17 @@ public class ReportCommand {
                     return 1;
                 } */
 
-                String offender = p.getName();
-                long time = profile.getLong(offender);
+                String offenderName = offender.getName();
+                long time = profile.getLong(offenderName);
 
                 if (time + CorviolisUtils.settings.reportDelay <= new Date().getTime()) {
-                    if (time != -0) profile.dropLong(offender);
-                    profile.put(offender, new Date().getTime());
+                    if (time != -0) profile.dropLong(offenderName);
+                    profile.put(offenderName, new Date().getTime());
                     profile.put("REPORTS", profile.getInt("REPORTS") + 1);
 
                     executor.sendMessage(new LiteralText("Report Sent").formatted(Formatting.GREEN), false);
-                    AirtableAPI.createReport(executor.getEntityName(), offender, reason, "report");
-                    TodoistAPI.createReport(executor.getEntityName(), offender, reason);
+                    NocodbAPI.createReport(executor, offender, reason, "report");
+                    TodoistAPI.createReport(executor.getEntityName(), offenderName, reason);
 
                 } else executor.sendMessage(new LiteralText("You have already reported this player recently").formatted(Formatting.RED), false);
             }
@@ -95,11 +94,11 @@ public class ReportCommand {
     private static int setReportingPermission(CommandContext<ServerCommandSource> context, Collection<GameProfile> targets, boolean allowedToReport) throws CommandSyntaxException {
         PlayerEntity executor = context.getSource().getPlayer();
 
-        for (GameProfile p : targets) {
-            DataContainer profile = getProfile(p.getId());
+        for (GameProfile target : targets) {
+            DataContainer profile = getProfile(target.getId());
             profile.put("ALLOWED_TO_REPORT", allowedToReport);
-            if (allowedToReport) executor.sendMessage(new LiteralText(p.getName() + " is now allowed to make reports"), false);
-            else executor.sendMessage(new LiteralText(p.getName() + " is no longer allowed to make reports"), false);
+            if (allowedToReport) executor.sendMessage(new LiteralText(target.getName() + " is now allowed to make reports"), false);
+            else executor.sendMessage(new LiteralText(target.getName() + " is no longer allowed to make reports"), false);
         }
         return 1;
     }
@@ -107,9 +106,9 @@ public class ReportCommand {
     private static int viewInfo(CommandContext<ServerCommandSource> context, Collection<GameProfile> targets) throws CommandSyntaxException {
         PlayerEntity executor = context.getSource().getPlayer();
 
-        for (GameProfile p : targets) {
-            DataContainer profile = getProfile(p.getId());
-            executor.sendMessage(new LiteralText(p.getName() + ":").formatted(Formatting.AQUA), false);
+        for (GameProfile target : targets) {
+            DataContainer profile = getProfile(target.getId());
+            executor.sendMessage(new LiteralText(target.getName() + ":").formatted(Formatting.AQUA), false);
             executor.sendMessage(new LiteralText("Allowed to report: " + profile.getBoolean("ALLOWED_TO_REPORT")), false);
             executor.sendMessage(new LiteralText("Reports: " + profile.getInt("REPORTS")), false);
         }

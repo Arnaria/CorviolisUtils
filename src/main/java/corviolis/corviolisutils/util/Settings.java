@@ -10,11 +10,8 @@ public class Settings implements ConfigData {
 
     public String todoistToken = "xxx";
 
-    public String airtableToken = "xxx";
-    public String airtableBaseId = "xxx";
-    public String airtableReportsId = "xxx";
-    public String airtableBansId = "xxx";
-    public String airtableRulesId = "xxx";
+    public String nocodbToken = "xxx";
+    public String nocodbUrl = "xxx";
 
     @Comment("delay in milliseconds - no longer than 9 digits - default is 24 hours")
     public int reportDelay = 86400000;

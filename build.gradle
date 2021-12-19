@@ -7,12 +7,12 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+    mavenCentral()
     maven { url 'https://jitpack.io' }
     maven { url "https://maven.terraformersmc.com/" }
     maven { url "https://maven.shedaniel.me/" }
-    maven { url "https://maven.restlet.com" }
-    mavenCentral()
 }
+
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -25,8 +25,17 @@ dependencies {
 
     include(implementation("com.github.MrNavaStar:TodoistAPI:${project.todoist_version}"))
 
-    //include(implementation("dev.fuxing:airtable-api:${project.airtable_version}"))
-    include(implementation("com.github.Sybit-Education:airtable.java:${project.airtable_version}"))
+    //airtable is stupid
+    /*include(implementation("org.apache.httpcomponents:httpclient:4.5.9"))
+    include(modImplementation('com.mashape.unirest:unirest-java:1.4.9') {
+        exclude(group: "commons-logging")
+    })
+    include(implementation('commons-beanutils:commons-beanutils:1.9.3'))
+    include(implementation('org.json:json:20160810'))
+    //compile group: 'com.google.code.gson:gson', version:'2.8.5'
+    include(implementation('commons-beanutils:commons-beanutils:1.9.3'))
+    include(implementation('commons-io:commons-io:2.6'))
+    include(implementation('org.slf4j:slf4j-api:1.7.26'))*/
 }
 
 processResources {
