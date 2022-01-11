@@ -2,6 +2,7 @@ package corviolis.corviolisutils;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
+import corviolis.corviolisutils.commands.AdminModeCommand;
 import corviolis.corviolisutils.commands.ReportCommand;
 import corviolis.corviolisutils.commands.RulesCommand;
 import corviolis.corviolisutils.commands.SyncBansCommand;
@@ -36,13 +37,13 @@ public class CorviolisUtils implements ModInitializer {
 
             ServerLifecycleEvents.SERVER_STARTED.register(server -> {
                 TodoistAPI.init();
-                //AirtableAPI.init();
                 NocodbAPI.init();
 
                 userCache = server.getUserCache();
                 playerManager = server.getPlayerManager();
 
                 CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
+                AdminModeCommand.register(dispatcher);
                 ReportCommand.register(dispatcher);
                 SyncBansCommand.register(dispatcher);
                 RulesCommand.register(dispatcher);

@@ -25,7 +25,6 @@ public class RulesCommand {
                 .then(CommandManager.literal("update").requires(source -> source.hasPermissionLevel(4))
                     .executes(RulesCommand::updateRules))
         );
-
     }
 
     private static int viewRules(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
