@@ -13,11 +13,20 @@ import mc.microconfig.MicroConfig;
 import mrnavastar.sqlib.api.databases.Database;
 import mrnavastar.sqlib.api.databases.SQLiteDatabase;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
 import net.minecraft.util.UserCache;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,6 +36,7 @@ public class CorviolisUtils implements ModInitializer {
     public static Settings settings;
     public static PlayerManager playerManager;
     private static UserCache userCache;
+    public static Scoreboard scoreboard;
 
     @Override
     public void onInitialize() {
@@ -41,8 +51,13 @@ public class CorviolisUtils implements ModInitializer {
 
                 userCache = server.getUserCache();
                 playerManager = server.getPlayerManager();
+                scoreboard = server.getScoreboard();
 
-                CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
+                //admin mode stuff
+                scoreboard.addObjective("Reports", ScoreboardCriterion.AIR, new LiteralText("Reports"), ScoreboardCriterion.RenderType.INTEGER);
+            });
+
+            CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
                 AdminModeCommand.register(dispatcher);
                 ReportCommand.register(dispatcher);
                 SyncBansCommand.register(dispatcher);
